@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.4.1/react.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.4.1/react-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        //working with states, for things that are going to change
+        // use states for things that are not going to change, use props.
+
+        let Board = React.createClass({
+            getInitialState: function () {
+                return {
+                    comments:  ['custom Text',
+                        'More custom text coming up'],
+                }
+            },
+
+            addComments : function (text) {
+                let arr = this.state.comments;
+                arr.push(text);
+                this.setState({comments: arr});
+            },
+                                                /* if I want to let the child use this functions, I can pass them
+                                                 inside and Components and let the child use them by
+                                                 this.props.functionName*/
+            removeComment: function (index) {
+                console.log("removing comments"+index);
+                let arr = this.state.comments;
+                arr.splice(index, 1);
+                this.setState({comments: arr});
+            },
+
+            updateComment: function (newText, index) {
+                console.log('updating comment');
+                let arr = this.state.comments;
+                arr[index] = newText;
+                this.setState({comments: arr});
+            },
+
+            eachComment: function (text, i) {
+                return (
+                        <Component key={i} index={i}
+                                   updateCommentText={this.updateComment}
+                                   deleteCommentFromBoard={this.removeComment}>
+                            {text}
+                        </Component>
+                )
+            },
+                                                /*<Component>Custom Text</Component>
+                                                 <Component>More Custom Text</Component>
+                                                 replacing the inside components with see below*/
+            render: function () {
+                return (
+                        <div>
+                            <button onClick={this.addComments.bind(null, 'Default Text')}>Add new</button>
+                            <div>
+                                {
+                                    this.state.comments.map(this.eachComment)
+                                }
+                            </div>
+                        </div>
+                );
+            }
+        });
+
+        let Component = React.createClass({
+
+            getInitialState: function () {         // Adding state to components, start with getInitialState
+                return {editing: false};
+            },
+
+            edit : function () {                    //event hanlding
+                console.log('clicked edit');
+                 this.setState({editing: true});
+            },
+
+            remove: function () {
+                console.log('clicked remove');      /* Child has access to the parent functions via the props .*/
+                this.props.deleteCommentFromBoard(this.props.index);
+            },
+
+            save: function () {
+                                                    /* To save the value that is written in the textarea use refs.
+                                                     which is better than id.*/
+                let val = this.refs.newText.value;  // reference to the text area
+                console.log(val);
+                this.props.updateCommentText(val, this.props.index);
+                this.setState({editing: false});
+            },
+
+            renderNormal: function () {
+                return (
+                    <div>
+                        <div>{this.props.children}</div>
+                        <button onClick={this.edit}>Edit</button>
+                        <button onClick={this.remove}>Remove</button>
+                    </div>
+                );
+            },
+
+            renderForm: function () {
+                return (
+                    <div>
+                        <textarea ref="newText" defaultValue={this.props.children}></textarea>
+                        <button onClick={this.save}>Save</button>
+                    </div>
+                );
+            },
+
+            render: function () {
+                if(this.state.editing){
+                    return this.renderForm();
+                }else{
+                    return this.renderNormal();
+                }
+            }
+        });
+
+
+        let Movie = React.createClass({
+            render: function () {
+                return (<div>
+                    <h1>Movie Name:{this.props.title}</h1>
+                    <h2>Genere:{this.props.genere}</h2>
+                </div>);
+            }
+        });
+        let CheckBoxState = React.createClass({
+
+            getInitialState: function(){            //built in function
+                return {checked: true};             //one state which is made as checked
+            },
+
+            handleChecked: function () {
+                /* cool thing abt react, components is
+                 that we dont need to tell them to redraw html*/
+                return this.setState({checked: !this.state.checked});
+            },
+
+            render: function () {
+                let msg;
+                if(this.state.checked){
+                    msg = 'checked';
+                }else{
+                    msg = 'unchecked';
+                }
+                return (
+                        <div>
+                            <input type="checkbox"
+                                   defaultChecked={this.state.checked}
+                                   onChange={this.handleChecked}/>
+                            <h1>checkbox is {msg}</h1>
+                        </div>
+                )
+            }
+        });
+
+        ReactDOM.render(<div>
+                    <Board/>
+                    <Movie title="avatar" genere="action"/>
+                    <Movie title="other" genere="movie"/>
+                    <CheckBoxState/>
+                </div>,
+            document.getElementById('root')
+        )
+    </script>
+</body>
+</html>
